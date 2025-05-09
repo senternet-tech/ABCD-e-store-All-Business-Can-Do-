@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Meesho-Style Store</title>
+    <title>My Enhanced Store</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -14,6 +14,7 @@
         .product-card {
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             overflow: hidden;
+            cursor: pointer; /* Indicate it's clickable */
         }
         .product-card:hover {
             transform: translateY(-5px);
@@ -37,6 +38,8 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+        /* General Modal Styling */
         .modal {
             display: none;
             position: fixed;
@@ -47,16 +50,49 @@
             height: 100%;
             overflow: auto;
             background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
         }
         .modal-content {
             background-color: #fff;
-            margin: 10% auto;
+            margin: 5% auto; /* Adjusted margin for potentially larger content */
             padding: 20px;
             border-radius: 8px;
             width: 90%;
-            max-width: 500px;
             box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            animation: slideInUp 0.4s ease-out;
         }
+
+        /* Product Detail Modal Specifics */
+        #productDetailModal .modal-content {
+            max-width: 700px; /* Wider for more details */
+        }
+        .product-detail-image-main {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+        }
+        .product-detail-thumbnails {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            overflow-x: auto; /* For many thumbnails */
+        }
+        .product-detail-thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s ease;
+        }
+        .product-detail-thumbnail:hover, .product-detail-thumbnail.active {
+            border-color: #ec4899; /* Pink-500 */
+        }
+
+
         .close-button {
             color: #aaa;
             float: right;
@@ -71,6 +107,62 @@
         }
         input[type="text"], input[type="number"], input[type="url"], textarea {
             width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Tabs Styling */
+        .tabs-container {
+            margin-bottom: 2rem;
+        }
+        .tab-buttons button {
+            padding: 0.75rem 1.5rem;
+            margin-right: 0.5rem;
+            border-radius: 0.375rem 0.375rem 0 0; /* Rounded top corners */
+            background-color: #e5e7eb; /* gray-200 */
+            color: #374151; /* gray-700 */
+            font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .tab-buttons button.active {
+            background-color: #ec4899; /* pink-500 */
+            color: white;
+        }
+        .tab-content {
+            display: none;
+            padding: 1.5rem;
+            background-color: white;
+            border-radius: 0 0.375rem 0.375rem 0.375rem; /* Rounded bottom corners */
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .shop-card {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.3s ease;
+        }
+        .shop-card:hover {
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        }
+        .shop-logo {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 50%;
         }
     </style>
 </head>
@@ -88,8 +180,8 @@
     </header>
 
     <div id="productModal" class="modal">
-        <div class="modal-content">
-            <span class="close-button" onclick="closeModal()">&times;</span>
+        <div class="modal-content max-w-lg">
+            <span class="close-button" onclick="closeModal('productModal')">&times;</span>
             <h2 class="text-2xl font-semibold mb-6 text-gray-800">Add New Product</h2>
             <form id="addProductForm" class="space-y-4">
                 <div>
@@ -105,8 +197,16 @@
                     <textarea id="productDescription" name="productDescription" rows="3" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm"></textarea>
                 </div>
                 <div>
-                    <label for="productImageURL" class="block text-sm font-medium text-gray-700">Image URL:</label>
-                    <input type="url" id="productImageURL" name="productImageURL" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="https://example.com/image.jpg">
+                    <label for="productImageURL" class="block text-sm font-medium text-gray-700">Main Image URL:</label>
+                    <input type="url" id="productImageURL" name="productImageURL" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="https://example.com/main-image.jpg">
+                </div>
+                 <div>
+                    <label for="productImageURL2" class="block text-sm font-medium text-gray-700">Additional Image URL 2 (Optional):</label>
+                    <input type="url" id="productImageURL2" name="productImageURL2" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="https://example.com/image2.jpg">
+                </div>
+                <div>
+                    <label for="productImageURL3" class="block text-sm font-medium text-gray-700">Additional Image URL 3 (Optional):</label>
+                    <input type="url" id="productImageURL3" name="productImageURL3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-pink-500 focus:border-pink-500 sm:text-sm" placeholder="https://example.com/image3.jpg">
                 </div>
                 <button type="submit" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-300 disabled:opacity-50">
                     Submit Product
@@ -116,7 +216,44 @@
         </div>
     </div>
 
+    <div id="productDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" onclick="closeModal('productDetailModal')">&times;</span>
+            <div id="productDetailContent" class="flex flex-col md:flex-row gap-6">
+                <div class="md:w-1/2">
+                    <img id="detailMainImage" src="" alt="Product Image" class="product-detail-image-main">
+                    <div id="detailThumbnails" class="product-detail-thumbnails">
+                        </div>
+                </div>
+                <div class="md:w-1/2">
+                    <h2 id="detailName" class="text-3xl font-bold text-gray-800 mb-2"></h2>
+                    <p id="detailDescription" class="text-gray-600 mb-4"></p>
+                    <p id="detailPrice" class="text-3xl font-bold text-pink-600 mb-6"></p>
+                    <p class="text-sm text-gray-500 mb-1">Product ID: <span id="detailProductID"></span></p>
+                    <button id="detailBuyButton" class="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg text-lg transition duration-300">
+                        Order on WhatsApp
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <main class="container mx-auto px-4 py-8">
+        <section class="tabs-container mb-12">
+            <div class="tab-buttons">
+                <button class="tab-button active" onclick="openTab(event, 'shopsTab')">Featured Shops</button>
+                </div>
+
+            <div id="shopsTab" class="tab-content active">
+                <h3 class="text-xl font-semibold text-gray-700 mb-4">Browse Our Partner Shops</h3>
+                <div id="shopsGrid" class="space-y-4 max-h-96 overflow-y-auto">
+                    <p id="noShopsMessage" class="text-gray-500">Loading shops or no shops to display yet...</p>
+                </div>
+            </div>
+
+            </section>
+
+
         <h2 class="text-2xl font-semibold mb-6 text-gray-800">Our Products</h2>
         <div id="loader" class="loader"></div>
         <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -142,35 +279,53 @@
         const loader = document.getElementById('loader');
         const noProductsMessage = document.getElementById('noProducts');
 
-        const modal = document.getElementById('productModal');
+        const addProductModal = document.getElementById('productModal');
+        const productDetailModal = document.getElementById('productDetailModal'); // New modal
         const addProductBtn = document.getElementById('addProductBtn');
         const addProductForm = document.getElementById('addProductForm');
         const uploadStatus = document.getElementById('uploadStatus');
 
         // --- Modal Logic ---
         addProductBtn.onclick = function() {
-            modal.style.display = "block";
+            addProductModal.style.display = "block";
             addProductForm.reset();
             uploadStatus.textContent = '';
         }
 
-        function closeModal() {
-            modal.style.display = "none";
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = "none";
         }
 
         window.onclick = function(event) {
-            if (event.target == modal) {
-                closeModal();
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = "none";
             }
         }
 
+        // --- Tab Logic ---
+        function openTab(event, tabId) {
+            let i, tabcontent, tablinks;
+            tabcontent = document.getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+                tabcontent[i].classList.remove("active");
+            }
+            tablinks = document.getElementsByClassName("tab-button");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].classList.remove("active");
+            }
+            document.getElementById(tabId).style.display = "block";
+            document.getElementById(tabId).classList.add("active");
+            event.currentTarget.classList.add("active");
+        }
+
+
         // --- Fetch and Display Products ---
         async function fetchProducts() {
-            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' || GOOGLE_SCRIPT_URL === '') { // Added check for empty string
-                console.error("Google Apps Script URL is not set. Please update it in the script.");
-                productGrid.innerHTML = `<p class="text-red-500 text-center col-span-full">Error: Google Apps Script URL not configured. Please update the GOOGLE_SCRIPT_URL variable in the JavaScript code with your deployed Web App URL.</p>`;
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' || GOOGLE_SCRIPT_URL === '') {
+                console.error("Google Apps Script URL is not set.");
+                productGrid.innerHTML = `<p class="text-red-500 text-center col-span-full">Error: Google Apps Script URL not configured.</p>`;
                 loader.style.display = 'none';
-                noProductsMessage.style.display = 'none';
                 return;
             }
 
@@ -179,7 +334,9 @@
             noProductsMessage.style.display = 'none';
 
             try {
-                const response = await fetch(GOOGLE_SCRIPT_URL);
+                // Assuming your script can differentiate between fetching products and shops via a parameter,
+                // or you have different URLs. For now, we fetch products.
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getProducts`); // Modified to use action parameter
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
@@ -188,7 +345,6 @@
                 if (data.error) {
                     console.error('Error fetching products from Apps Script:', data.error);
                     productGrid.innerHTML = `<p class="text-red-500 text-center col-span-full">Error fetching products: ${data.error}</p>`;
-                    noProductsMessage.style.display = 'none';
                 } else if (data.products && data.products.length > 0) {
                     displayProducts(data.products);
                 } else {
@@ -196,23 +352,25 @@
                 }
             } catch (error) {
                 console.error('Failed to fetch products:', error);
-                productGrid.innerHTML = `<p class="text-red-500 text-center col-span-full">Failed to load products. Check console for details. Ensure your Google Apps Script is deployed correctly, accessible, and the URL is correct.</p>`;
-                noProductsMessage.style.display = 'none';
+                productGrid.innerHTML = `<p class="text-red-500 text-center col-span-full">Failed to load products. Check console and GAS deployment.</p>`;
             } finally {
                 loader.style.display = 'none';
             }
         }
 
         function displayProducts(products) {
-            productGrid.innerHTML = ''; // Clear grid
+            productGrid.innerHTML = '';
             products.forEach(product => {
-                // Ensure product ID is available, as it's crucial for the WhatsApp message
-                // The Google Apps Script should be providing an 'ID' field for each product.
-                const productId = product.ID || 'N/A'; // Fallback if ID is missing
+                const productId = product.ID || 'N/A';
                 const name = product.Name || 'Unnamed Product';
                 const price = product.Price !== undefined && product.Price !== null ? parseFloat(product.Price).toFixed(2) : 'N/A';
                 const description = product.Description || 'No description available.';
-                const imageUrl = product.ImageURL || 'https://placehold.co/600x400/E8117F/white?text=No+Image+Available';
+                const imageUrl = product.ImageURL || 'https://placehold.co/600x400/E8117F/white?text=No+Image';
+                // Expecting AdditionalImages as an array from GAS, or individual fields like ImageURL2, ImageURL3
+                const additionalImages = product.AdditionalImages || [];
+                if (product.ImageURL2) additionalImages.push(product.ImageURL2);
+                if (product.ImageURL3) additionalImages.push(product.ImageURL3);
+                // Add more if you have ImageURL4, ImageURL5 etc. in your sheet
 
                 const card = document.createElement('div');
                 card.className = 'product-card bg-white rounded-lg shadow-md p-4 flex flex-col';
@@ -224,35 +382,81 @@
                     </div>
                     <div class="mt-auto">
                         <p class="text-xl font-bold text-pink-600 mb-3">₹${price}</p>
-                        <button class="buy-product-btn w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded-lg text-sm transition duration-300">
-                            Buy Product
+                        <button class="view-details-btn w-full bg-pink-500 hover:bg-pink-600 text-white font-semibold py-2 px-3 rounded-lg text-sm transition duration-300">
+                            View Details
                         </button>
                     </div>
                 `;
                 
-                // Add event listener for the "Buy Product" button
-                const buyButton = card.querySelector('.buy-product-btn');
-                buyButton.addEventListener('click', () => {
-                    const whatsappNumber = "919360291050"; // Your WhatsApp number with country code
-                    // Construct the message
-                    let message = `Hi, I'd like to order this product:\n`;
-                    message += `Product ID: ${productId}\n`;
-                    message += `Name: ${name}\n`;
-                    message += `Price: ₹${price}`;
-                    
-                    // Encode the message for the URL
-                    const encodedMessage = encodeURIComponent(message);
-                    
-                    // Create the WhatsApp link
-                    const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
-                    
-                    // Open the link in a new tab
-                    window.open(whatsappLink, '_blank');
+                card.querySelector('.view-details-btn').addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevent card click if button is more specific
+                    openProductDetailModal(product, imageUrl, additionalImages);
+                });
+                 // Make the whole card clickable to open detail view
+                card.addEventListener('click', () => {
+                    openProductDetailModal(product, imageUrl, additionalImages);
                 });
 
                 productGrid.appendChild(card);
             });
         }
+
+        function openProductDetailModal(product, mainImageUrl, additionalImagesArray) {
+            document.getElementById('detailName').textContent = product.Name || 'N/A';
+            document.getElementById('detailDescription').textContent = product.Description || 'No description available.';
+            document.getElementById('detailPrice').textContent = `₹${parseFloat(product.Price).toFixed(2) || 'N/A'}`;
+            document.getElementById('detailProductID').textContent = product.ID || 'N/A';
+            
+            const mainImageElement = document.getElementById('detailMainImage');
+            mainImageElement.src = mainImageUrl;
+            mainImageElement.alt = product.Name;
+
+            const thumbnailsContainer = document.getElementById('detailThumbnails');
+            thumbnailsContainer.innerHTML = ''; // Clear old thumbnails
+
+            // Add main image as the first thumbnail
+            const mainThumb = document.createElement('img');
+            mainThumb.src = mainImageUrl;
+            mainThumb.alt = product.Name + " thumbnail";
+            mainThumb.className = 'product-detail-thumbnail active';
+            mainThumb.onclick = () => {
+                mainImageElement.src = mainImageUrl;
+                document.querySelectorAll('.product-detail-thumbnail').forEach(t => t.classList.remove('active'));
+                mainThumb.classList.add('active');
+            };
+            thumbnailsContainer.appendChild(mainThumb);
+
+            // Add additional images as thumbnails
+            additionalImagesArray.forEach(imgUrl => {
+                if(imgUrl && imgUrl.trim() !== "") { // Ensure URL is not empty
+                    const thumb = document.createElement('img');
+                    thumb.src = imgUrl;
+                    thumb.alt = product.Name + " additional thumbnail";
+                    thumb.className = 'product-detail-thumbnail';
+                    thumb.onclick = () => {
+                        mainImageElement.src = imgUrl;
+                        document.querySelectorAll('.product-detail-thumbnail').forEach(t => t.classList.remove('active'));
+                        thumb.classList.add('active');
+                    };
+                    thumbnailsContainer.appendChild(thumb);
+                }
+            });
+
+            const detailBuyButton = document.getElementById('detailBuyButton');
+            detailBuyButton.onclick = () => {
+                const whatsappNumber = "919360291050"; // Your WhatsApp number
+                let message = `Hi, I'd like to order this product:\n`;
+                message += `Product ID: ${product.ID || 'N/A'}\n`;
+                message += `Name: ${product.Name}\n`;
+                message += `Price: ₹${parseFloat(product.Price).toFixed(2)}`;
+                const encodedMessage = encodeURIComponent(message);
+                const whatsappLink = `https://wa.me/${whatsappNumber}?text=${encodedMessage}`;
+                window.open(whatsappLink, '_blank');
+            };
+
+            productDetailModal.style.display = 'block';
+        }
+
 
         // --- Handle Product Upload ---
         addProductForm.addEventListener('submit', async function(event) {
@@ -263,10 +467,10 @@
             uploadStatus.className = 'mt-4 text-sm text-blue-600';
 
             if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' || GOOGLE_SCRIPT_URL === '') {
-                 uploadStatus.textContent = 'Error: Google Apps Script URL not configured. Please update it before submitting.';
-                 uploadStatus.className = 'mt-4 text-sm text-red-600';
-                 submitButton.disabled = false;
-                 return;
+                uploadStatus.textContent = 'Error: Google Apps Script URL not configured.';
+                uploadStatus.className = 'mt-4 text-sm text-red-600';
+                submitButton.disabled = false;
+                return;
             }
 
             const formData = new FormData(this);
@@ -274,36 +478,132 @@
                 name: formData.get('productName'),
                 price: formData.get('productPrice'),
                 description: formData.get('productDescription'),
-                imageURL: formData.get('productImageURL')
+                imageURL: formData.get('productImageURL'),
+                imageURL2: formData.get('productImageURL2'), // Make sure your GAS doPost handles these
+                imageURL3: formData.get('productImageURL3')  // Make sure your GAS doPost handles these
             };
 
             try {
+                // IMPORTANT: Your Google Apps Script doPost function needs to be able to receive this JSON payload.
+                // You might need to adjust your Apps Script if it's expecting form data differently.
+                // The `mode: 'no-cors'` is often problematic for getting actual success/error responses from GAS.
+                // For robust error handling and response, you should configure your GAS to return JSON with proper CORS headers.
+                // If you keep `mode: 'no-cors'`, you won't be able to read the response body here.
                 const response = await fetch(GOOGLE_SCRIPT_URL, {
                     method: 'POST',
-                    mode: 'no-cors',
-                    body: JSON.stringify(productData)
+                    // mode: 'no-cors', // Consider removing for better response handling if GAS is set up for CORS
+                    headers: {
+                        'Content-Type': 'application/json', // If your GAS doPost parses JSON
+                    },
+                    body: JSON.stringify({action: "addProduct", data: productData}) // Sending JSON
                 });
+                
+                // If not using 'no-cors' and GAS returns JSON:
+                // const result = await response.json();
+                // if (result.success) {
+                //    uploadStatus.textContent = 'Product submitted successfully!';
+                // } else {
+                //    uploadStatus.textContent = `Error: ${result.message || 'Unknown error'}`;
+                // }
 
+                // Assuming success with 'no-cors' or if you don't check response body
                 uploadStatus.textContent = 'Product submitted! It might take a moment to appear.';
                 uploadStatus.className = 'mt-4 text-sm text-green-600';
                 this.reset();
                 
                 setTimeout(() => {
-                    closeModal();
-                    fetchProducts();
+                    closeModal('productModal');
+                    fetchProducts(); // Refresh product list
                 }, 2000);
 
             } catch (error) {
                 console.error('Error submitting product:', error);
-                uploadStatus.textContent = 'Error submitting product. Check console and ensure Apps Script URL is correct and script is working.';
+                uploadStatus.textContent = 'Error submitting product. Check console and GAS.';
                 uploadStatus.className = 'mt-4 text-sm text-red-600';
             } finally {
                 submitButton.disabled = false;
             }
         });
 
-        document.addEventListener('DOMContentLoaded', (event) => {
+        // --- Fetch and Display Shops (Example) ---
+        async function fetchShops() {
+            const shopsGrid = document.getElementById('shopsGrid');
+            const noShopsMessage = document.getElementById('noShopsMessage');
+            shopsGrid.innerHTML = ''; // Clear previous
+            noShopsMessage.textContent = 'Loading shops...';
+
+
+            if (GOOGLE_SCRIPT_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE' || GOOGLE_SCRIPT_URL === '') {
+                noShopsMessage.textContent = 'Error: Google Apps Script URL not configured for shops.';
+                noShopsMessage.style.color = 'red';
+                return;
+            }
+
+            try {
+                // YOU WILL NEED TO ADJUST YOUR GOOGLE APPS SCRIPT
+                // to handle ?action=getShops and return shop data from another sheet or source.
+                // Example shop data structure: [{ Name: "Shop1", LogoURL: "url", Description: "Desc" }, ...]
+                const response = await fetch(`${GOOGLE_SCRIPT_URL}?action=getShops`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+
+                if (data.error) {
+                    console.error('Error fetching shops from Apps Script:', data.error);
+                    noShopsMessage.textContent = `Error fetching shops: ${data.error}`;
+                    noShopsMessage.style.color = 'red';
+                } else if (data.shops && data.shops.length > 0) {
+                    noShopsMessage.style.display = 'none';
+                    displayShops(data.shops);
+                } else {
+                    noShopsMessage.textContent = 'No shops found or yet to be listed.';
+                    noShopsMessage.style.color = 'initial';
+                }
+            } catch (error) {
+                console.error('Failed to fetch shops:', error);
+                noShopsMessage.textContent = 'Failed to load shops. Check console and GAS setup.';
+                noShopsMessage.style.color = 'red';
+            }
+        }
+
+        function displayShops(shops) {
+            const shopsGrid = document.getElementById('shopsGrid');
+            shopsGrid.innerHTML = ''; // Clear loader or previous messages
+
+            shops.forEach(shop => {
+                const shopName = shop.Name || 'Unnamed Shop';
+                const shopLogo = shop.LogoURL || 'https://placehold.co/100x100/7F1D1D/white?text=Shop'; // Dark red placeholder
+                const shopDescription = shop.Description || 'No description available.';
+                const shopLink = shop.LinkURL || '#'; // If you have a link for the shop
+
+                const card = document.createElement('div');
+                card.className = 'shop-card bg-white rounded-lg shadow hover:shadow-lg transition-shadow duration-300 p-4';
+                // If you want the shop card to be a link:
+                card.onclick = () => { if(shopLink !== '#') window.open(shopLink, '_blank'); };
+                if(shopLink !== '#') card.style.cursor = 'pointer';
+
+                card.innerHTML = `
+                    <img src="${shopLogo}" alt="${shopName} Logo" class="shop-logo w-16 h-16 rounded-full object-cover border-2 border-pink-200">
+                    <div class="flex-grow">
+                        <h4 class="text-lg font-semibold text-pink-700">${shopName}</h4>
+                        <p class="text-sm text-gray-600">${shopDescription}</p>
+                    </div>
+                    ${shop.LinkURL ? `<a href="${shop.LinkURL}" target="_blank" class="ml-auto bg-pink-500 hover:bg-pink-600 text-white text-xs font-semibold py-1 px-3 rounded-full transition duration-300">Visit</a>` : ''}
+                `;
+                shopsGrid.appendChild(card);
+            });
+        }
+
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
             fetchProducts();
+            fetchShops(); // Fetch shops on page load
+            // Set the default tab
+            if (document.querySelector('.tab-button.active')) {
+                 openTab({currentTarget: document.querySelector('.tab-button.active')}, document.querySelector('.tab-content.active').id);
+            }
         });
     </script>
 
